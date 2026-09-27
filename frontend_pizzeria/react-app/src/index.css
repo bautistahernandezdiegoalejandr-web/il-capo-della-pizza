@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8f7f5;
+  color: #2a2a2a;
+}
+
+/* Ocultar scrollbar pero permitir scroll (categorías del menú) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Estilo para los radio/checkbox ocultos en los selectores de personalización */
+.option-card input:checked + div {
+  border-color: #cc1a22;
+  background-color: #fff9f9;
+}
+.option-card input:checked + div .text-brand-red {
+  color: #cc1a22;
+}
+
+/* Animación suave para mensajes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
