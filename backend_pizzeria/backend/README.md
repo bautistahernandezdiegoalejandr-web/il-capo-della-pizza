@@ -1,249 +1,279 @@
-# Il Capo della Pizza — Backend (API REST + MySQL)
+# Il Capo della Pizza — Backend
 
-Esto es el backend real: reemplaza el
-`localStorage` del prototipo por una base de datos MySQL de verdad, con
-autenticación segura y una API que el frontend React consume.
+API REST construida en **Node.js + Express**, con **MySQL** como base de
+datos. Reemplaza por completo la simulación en `localStorage` del
+prototipo original: autenticación real, inventario real, y pedidos que se
+guardan de verdad.
 
-> 📌 **Este backend ya está desplegado en producción.** Ver la sección
-> [Despliegue actual](#despliegue-actual) más abajo, o el `README.md` en la
-> raíz del repositorio para los enlaces en vivo y cómo probar el sitio
-> completo.
+> 📌 Este backend ya está desplegado en producción (Render + MySQL en
+> Aiven). Para los enlaces en vivo, credenciales de administrador y cómo
+> probar el flujo completo, ver el `README.md` en la raíz del repositorio.
 
-## Requisitos
+## Tecnologías
 
-- **Node.js** 18 o superior.
-- **MySQL** 8 o superior. Puedes usar:
-  - Un servidor local en tu computador, o
-  - Un proveedor en la nube (este proyecto usa **Aiven**, plan gratuito). Si tu proveedor exige conexión **SSL** (como Aiven), necesitarás su certificado — ver el paso 3.
+- **Express** — servidor y ruteo
+- **MySQL** (vía `mysql2/promise`, con pool de conexiones)
+- **JWT** guardado en cookie `httpOnly` — autenticación de sesión
+- **bcryptjs** — hash de contraseñas
+- **Wompi** — pasarela de pagos (tarjeta, PSE, Nequi, Bancolombia)
+- **Nodemailer** — correo de recuperación de contraseña
 
-## Puesta en marcha, paso a paso
+## Cómo correrlo en tu computador
 
-### 1. Instala las dependencias
+Requiere Node.js 18+ y acceso a un servidor MySQL 8+ (local o en la nube).
 
 ```bash
 cd backend
 npm install
 ```
 
-### 2. Crea la base de datos
-
-Con tu servidor MySQL corriendo (local o en la nube), ejecuta:
-
-```bash
-mysql -u root -p < src/db/schema.sql
-```
-
-Si tu proveedor exige SSL (ej. Aiven), agrega las banderas correspondientes:
-```bash
-mysql --host=TU_HOST --port=TU_PUERTO --user=TU_USUARIO --password="TU_CLAVE" --ssl-ca="ruta/al/ca.pem" --ssl-mode=REQUIRED < src/db/schema.sql
-```
-
-Esto crea la base de datos `il_capo_della_pizza` y las 6 tablas: `usuarios`,
-`productos`, `pedidos`, `pedido_items`, `direcciones`, `metodos_pago`.
-
-### 3. Configura las variables de entorno
-
-Copia el archivo de ejemplo y ábrelo para completar tus propios datos:
+### 1. Variables de entorno
 
 ```bash
 cp .env.example .env
 ```
 
-Como mínimo, completa:
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: tus credenciales de MySQL.
-- `JWT_SECRET`: una cadena aleatoria larga. Puedes generar una con:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-  ```
-- `SMTP_*`: credenciales de un servidor de correo, para que funcione la recuperación de contraseña (ver sección de abajo).
+Completa como mínimo:
 
-**Si tu base de datos exige SSL** (Aiven y la mayoría de proveedores gratuitos en la nube lo exigen): descarga el certificado CA desde el panel de tu proveedor y guárdalo como `ca.pem` en la raíz de esta carpeta (`backend/ca.pem`, junto a `server.js`). `src/config/db.js` lo detecta automáticamente si existe — si no existe, se conecta sin SSL (útil para MySQL local). Este archivo es un certificado público, no un secreto, pero de todas formas revisa que esté listado en tu `.gitignore` de forma consciente según tu flujo de trabajo.
+```
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+JWT_SECRET=
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+```
 
-### 4. Carga los datos iniciales (menú + usuario admin)
+Genera un `JWT_SECRET` seguro con:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+**Si tu proveedor de MySQL exige conexión SSL** (como Aiven, o la mayoría
+de opciones gratuitas en la nube): descarga el certificado CA desde el
+panel de tu proveedor y guárdalo como `ca.pem` en esta misma carpeta
+(junto a `server.js`). `src/config/db.js` lo detecta automáticamente si
+existe; si no existe, se conecta sin SSL (para MySQL local, por ejemplo).
+
+### 2. Crea la base de datos
+
+```bash
+mysql -u root -p < src/db/schema.sql
+```
+
+(Con SSL, agrega `--host`, `--port`, `--user`, `--password`, `--ssl-ca` y
+`--ssl-mode=REQUIRED` según tu proveedor.)
+
+Esto crea la base de datos y sus 6 tablas: `usuarios`, `productos`,
+`pedidos`, `pedido_items`, `direcciones`, `metodos_pago`. El nombre de la
+base la define el propio `schema.sql` (`CREATE DATABASE IF NOT EXISTS ...`)
+— usa ese mismo nombre en tu variable `DB_NAME`.
+
+Las migraciones en `src/db/migrations/` (`002_pagos.sql`,
+`003_facturacion.sql`) **no son necesarias en una instalación nueva** —
+`schema.sql` ya incluye todo. Solo sirven para actualizar una base de
+datos creada antes de que existieran esas columnas.
+
+### 3. Carga datos de ejemplo (menú + usuario admin)
 
 ```bash
 npm run seed
 ```
 
-Esto imprime en la consola el correo y la contraseña del usuario
-administrador de ejemplo — **cámbiala apenas inicies sesión la primera vez**.
-Correr el seed más de una vez es seguro: no duplica productos ni el usuario admin.
+Imprime en la consola el correo y la contraseña del administrador de
+ejemplo. **Cámbiala después del primer inicio de sesión** — es
+especialmente importante si tu repositorio es público, ya que la
+contraseña por defecto queda visible en `src/db/seed.js`.
 
-### 5. Inicia el servidor
+### 4. Inicia el servidor
 
 ```bash
 npm run dev
 ```
 
-Deberías ver: `API corriendo en http://localhost:4000` (o el puerto que definas en `PORT`; en Render, por ejemplo, la plataforma asigna ese valor automáticamente).
+Verás: `API corriendo en http://localhost:4000` (o el puerto que Render u
+otra plataforma asigne automáticamente vía `PORT`).
 
-Prueba que funciona abriendo `http://localhost:4000/api/salud` en el
-navegador — debería mostrar `{"ok":true, ...}`.
+Pruébalo abriendo `http://localhost:4000/api/salud` — debe responder
+`{"ok":true,"mensaje":"..."}`.
 
-## Configurar el envío de correos (recuperación de contraseña)
+### 5. Conecta el frontend
 
-Para que el botón de "¿Olvidaste tu contraseña?" funcione de verdad, necesitas
-credenciales SMTP reales en el `.env`. La opción más simple para empezar:
-
-1. Ve a tu cuenta de Gmail → Seguridad → Verificación en 2 pasos (actívala si no la tienes).
-2. Busca "Contraseñas de aplicaciones" y genera una nueva para "Correo".
-3. Usa esa contraseña de 16 caracteres como `SMTP_PASSWORD`, y tu correo de Gmail como `SMTP_USER` y `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`.
-
-Para producción, es más recomendable usar un servicio dedicado como
-**Resend**, **SendGrid** o **Amazon SES**, que tienen mejor entregabilidad
-que una cuenta personal de Gmail.
-
-## Configurar la pasarela de pago (Wompi)
-
-Fase 3 de la hoja de ruta: los pagos ya no son una simulación — se procesan
-de verdad a través de **Wompi**, la pasarela más usada en comercios
-colombianos (soporta tarjeta, PSE, Nequi y Bancolombia en un solo widget).
-
-> ⚠️ **Estado actual:** el código de esta integración está completo y
-> funcional, pero la opción "Pago en línea" está **deshabilitada
-> visualmente en la interfaz** (ver `Pago.jsx` del frontend), para que la
-> demostración del proyecto no dependa de la disponibilidad de un servicio
-> externo. El flujo que se demuestra es "Efectivo a la Entrega". Todo lo
-> descrito en esta sección sigue siendo válido si se reactiva la opción.
-
-1. Crea una cuenta de comercio en [comercios.wompi.co](https://comercios.wompi.co) (el proceso de aprobación para cobrar de verdad toma unos días; mientras tanto puedes probar todo con las llaves de **sandbox/pruebas**).
-2. En el panel de Wompi, ve a la sección de "Llaves API" y copia:
-   - **Llave pública** (`pub_test_...` en pruebas, `pub_prod_...` en producción)
-   - **Llave privada** (`prv_test_...`) — no se usa en este proyecto por ahora, pero consérvala.
-   - **Secreto de integridad** (para firmar el monto a cobrar, evita que alguien lo manipule)
-   - **Secreto de eventos** (para verificar que los webhooks realmente vienen de Wompi)
-3. Pégalas en el `.env` del backend:
-   ```
-   WOMPI_PUBLIC_KEY=pub_test_...
-   WOMPI_INTEGRITY_SECRET=...
-   WOMPI_EVENTS_SECRET=...
-   WOMPI_PRIVATE_KEY=prv_test_...
-   ```
-4. **Configura el webhook** en el panel de Wompi (sección "Eventos" o "Webhooks"), apuntando a tu dominio público, por ejemplo:
-   ```
-   https://TU-DOMINIO-PUBLICO/api/pagos/webhook/wompi
-   ```
-   Mientras desarrollas en tu computador, Wompi no puede alcanzar `localhost` directamente — usa una herramienta como [ngrok](https://ngrok.com) (`ngrok http 4000`) para exponer temporalmente tu backend local con una URL pública, y usa esa URL en el webhook mientras pruebas.
-5. Si ejecutaste el `schema.sql` original antes de esta fase, corre también las migraciones nuevas:
-   ```bash
-   mysql -u root -p il_capo_della_pizza < src/db/migrations/002_pagos.sql
-   mysql -u root -p il_capo_della_pizza < src/db/migrations/003_facturacion.sql
-   ```
-   (Si es una instalación nueva, `schema.sql` ya incluye todo — no necesitas correr las migraciones por separado; ejecutarlas sobre una base nueva producirá un error de "columna duplicada", que es inofensivo y esperado.)
-
-### Cómo funciona el flujo de pago
-
-1. El cliente arma su pedido y elige "Pago en línea". El frontend llama a `POST /api/pedidos`.
-2. El backend crea el pedido con `estado_pago = 'pendiente'`, calcula el total de forma segura (nunca confía en lo que mande el navegador), y genera una **firma de integridad** con la llave secreta.
-3. El frontend abre el **Widget de Wompi** con esos datos — ahí es donde el cliente ingresa los datos de su tarjeta o elige su banco para PSE. Esos datos **nunca pasan por nuestro backend**, van directo a Wompi (cumplimiento PCI-DSS).
-4. Wompi procesa el pago y, en paralelo, le avisa a nuestro backend vía **webhook** (`POST /api/pagos/webhook/wompi`) si fue aprobado o rechazado. El backend valida la firma del webhook antes de confiar en él.
-5. Solo cuando el webhook confirma el pago como aprobado, el backend descuenta el inventario y el pedido queda disponible para que la cocina lo prepare.
-6. Mientras tanto, la pantalla de "Confirmación" del frontend consulta `GET /api/pagos/estado/:referencia` cada pocos segundos hasta obtener el resultado final.
-
-
-### Flujo alterno: Efectivo a la Entrega
-
-Este es el flujo que se usa actualmente en la demostración del proyecto, mientras "Pago en línea" está deshabilitado en la interfaz (ver más arriba).
-
-1. El cliente arma su pedido y elige "Efectivo a la Entrega". El frontend llama a `POST /api/pedidos` igual que en el flujo de Wompi.
-2. Como no hay una pasarela externa que confirme el pago, el backend no espera ningún webhook: crea el pedido directamente con estado `recibido` y descuenta el inventario de inmediato (a diferencia del flujo de Wompi, donde el inventario se descuenta solo tras la confirmación).
-3. El pedido aparece al instante en el panel de administración, donde el equipo de cocina/reparto puede avanzar su estado manualmente: Recibido → En preparación → En camino → Entregado.
-4. El cliente paga en efectivo directamente al repartidor cuando recibe el pedido — no hay ninguna interacción con Wompi en este flujo.
-
-## Facturación electrónica (DIAN) — por qué no está incluida
-
-En Colombia, dependiendo del tipo y volumen de tu negocio, puede ser
-obligatorio emitir factura electrónica ante la DIAN. Esto **no es algo que
-se pueda simplemente programar desde cero** — requiere ser facturador
-electrónico autorizado (o, en la práctica casi todos los negocios pequeños,
-contratar un proveedor tecnológico ya autorizado por la DIAN, como Siigo,
-Alegra, Facturación Nacional, etc.) y cumplir sus requisitos técnicos y
-legales de habilitación.
-
-Lo que sí queda preparado en este backend:
-- La tabla `pedidos` ya tiene los campos `facturado` (booleano) y
-  `factura_url` (para guardar el enlace al PDF/XML de la factura una vez
-  exista), listos para cuando conectes un proveedor.
-- Recomendación: antes de operar con clientes reales, confirma con un
-  contador si tu negocio está obligado a facturar electrónicamente y, si es
-  así, cuál proveedor te conviene — la mayoría ofrece una API REST sencilla
-  de conectar una vez tengas ese backend funcionando (que es justo lo que
-  tienes aquí).
-
-## Conectar el frontend
-
-En el proyecto de React, crea un archivo `.env` con:
-
+En `frontend_pizzeria/react-app/.env`:
 ```
 VITE_API_URL=http://localhost:4000/api
 ```
-
-Así el frontend sabrá a qué dirección enviar las peticiones (ver
-`src/services/api.js`). Corre `npm run dev` en el frontend como siempre — con
-el backend corriendo en paralelo (en otra terminal), ya deberían hablar entre sí.
+Corre el frontend en paralelo (ver su propio README).
 
 ## Estructura del proyecto
 
 ```
 backend/
-├── server.js               Punto de entrada: configura Express, CORS, cookies
-├── ca.pem                   Certificado SSL del proveedor de MySQL (si aplica)
-├── src/
-│   ├── config/db.js         Conexión (pool) a MySQL, con SSL condicional
-│   ├── db/
-│   │   ├── schema.sql        Las 6 tablas de la base de datos
-│   │   ├── migrations/       Migraciones incrementales (solo para bases ya existentes)
-│   │   └── seed.js           Carga el menú inicial + usuario admin
-│   ├── middleware/
-│   │   ├── auth.js           Verifica sesión (JWT) y rol de administrador
-│   │   └── errorHandler.js   Manejo centralizado de errores
-│   ├── controllers/          La lógica de cada endpoint
-│   ├── routes/                Define las URLs de la API
-│   └── utils/
-│       ├── token.js          Generar/verificar JWT, opciones de la cookie
-│       └── email.js          Envío del correo de recuperación de contraseña
+├── server.js                Punto de entrada: Express, CORS, cookies, rutas
+├── ca.pem                    Certificado SSL del proveedor de MySQL (si aplica)
+├── package.json
+└── src/
+    ├── config/
+    │   └── db.js              Pool de conexión a MySQL, con SSL condicional
+    ├── data/
+    │   └── personalizacionData.js  Precios/opciones de "Crea tu Pizza" (tamaños, extras)
+    ├── db/
+    │   ├── schema.sql          Las 6 tablas de la base de datos
+    │   ├── seed.js              Carga el menú inicial + usuario admin
+    │   └── migrations/         002_pagos.sql, 003_facturacion.sql (solo para bases existentes)
+    ├── middleware/
+    │   ├── auth.js              Verifica sesión (JWT) y rol de administrador
+    │   └── errorHandler.js      Manejo centralizado de errores
+    ├── controllers/
+    │   ├── authController.js
+    │   ├── productosController.js
+    │   ├── pedidosController.js
+    │   ├── direccionesController.js
+    │   └── pagosController.js
+    ├── routes/
+    │   ├── index.js              Une todas las rutas bajo /api
+    │   ├── authRoutes.js
+    │   ├── productosRoutes.js
+    │   ├── pedidosRoutes.js
+    │   ├── direccionesRoutes.js
+    │   └── pagosRoutes.js
+    └── utils/
+        ├── token.js             Generar/verificar JWT, opciones de la cookie de sesión
+        ├── email.js             Envío del correo de recuperación de contraseña
+        └── wompi.js             Firma de integridad y verificación de webhook de Wompi
 ```
 
 ## Endpoints principales
 
 | Método | Ruta | Descripción | Requiere |
 |---|---|---|---|
+| GET | `/api/salud` | Verifica que la API esté viva | — |
 | POST | `/api/auth/registro` | Crear cuenta | — |
 | POST | `/api/auth/login` | Iniciar sesión | — |
 | POST | `/api/auth/logout` | Cerrar sesión | — |
 | GET | `/api/auth/me` | Sesión actual | Sesión |
 | POST | `/api/auth/olvide-password` | Solicitar recuperación | — |
 | POST | `/api/auth/restablecer-password` | Fijar nueva contraseña | — |
-| GET | `/api/productos` | Ver el menú | — |
+| GET | `/api/productos` | Ver el menú (catálogo público) | — |
+| GET | `/api/productos/admin/todos` | Ver todo el menú (incl. no disponibles) | Admin |
+| POST/PUT/DELETE | `/api/productos/admin/...` | Crear, editar o eliminar productos | Admin |
 | POST | `/api/pedidos` | Realizar un pedido (checkout) | — (opcional) |
 | GET | `/api/pedidos/mios` | Ver mis pedidos | Sesión |
-| GET | `/api/productos/admin/todos` | Ver todo el menú (incl. inactivos) | Admin |
-| POST/PUT/DELETE | `/api/productos/admin/...` | Gestionar el menú | Admin |
 | GET | `/api/pedidos/admin/todos` | Ver todos los pedidos | Admin |
 | PATCH | `/api/pedidos/admin/:id/estado` | Cambiar estado de un pedido | Admin |
 | POST | `/api/pagos/webhook/wompi` | Recibe confirmaciones de pago de Wompi | — (verificado por firma) |
 | GET | `/api/pagos/estado/:referencia` | Consultar si un pago ya fue confirmado | — |
 
+## Flujo de pedidos
+
+El backend soporta dos formas de pago, definidas en la columna
+`metodo_pago` de la tabla `pedidos`: `'Efectivo a la Entrega'` y
+`'Pago en línea (Wompi)'`.
+
+### Efectivo a la Entrega — flujo activo en la demostración
+
+1. El frontend envía `POST /api/pedidos` con el carrito y la dirección.
+2. El backend **recalcula los precios en el servidor** a partir de la
+   base de datos — nunca confía en los precios que envía el navegador.
+3. Como no hay pasarela externa que confirmar, el pedido se crea de
+   inmediato con estado `recibido` y el inventario se descuenta al
+   instante.
+4. El pedido aparece enseguida en el panel de administración, donde se
+   puede avanzar su estado: Recibido → En preparación → En camino →
+   Entregado.
+
+### Pago en línea (Wompi) — implementado, deshabilitado en la interfaz
+
+El código de esta integración está completo, pero el frontend la muestra
+deshabilitada (badge "Próximamente") para que la demostración no dependa
+de un servicio externo. Así es como funciona cuando está activa:
+
+1. El backend crea el pedido con `estado_pago = 'pendiente'` y genera una
+   **firma de integridad** (`src/utils/wompi.js`) con una llave secreta
+   que solo conoce el servidor.
+2. El frontend abre el **Widget de Wompi** con esos datos — el cliente
+   ingresa los datos de su tarjeta o elige su banco ahí mismo, nunca en
+   nuestro código (cumplimiento PCI-DSS).
+3. Wompi notifica el resultado vía **webhook** (`POST /api/pagos/webhook/wompi`).
+   El backend valida la firma de ese webhook antes de confiar en él.
+4. Solo cuando el webhook confirma el pago como aprobado, se descuenta el
+   inventario y el pedido queda disponible para preparación.
+5. Mientras tanto, el frontend consulta `GET /api/pagos/estado/:referencia`
+   cada pocos segundos hasta obtener el resultado final.
+
+Para activarla de nuevo: completa `WOMPI_PUBLIC_KEY`,
+`WOMPI_INTEGRITY_SECRET` y `WOMPI_EVENTS_SECRET` en el `.env`, configura el
+webhook en el panel de Wompi apuntando a
+`https://TU-DOMINIO/api/pagos/webhook/wompi`, y habilita de nuevo la
+opción en `Pago.jsx` del frontend. Para pruebas en local, usa
+[ngrok](https://ngrok.com) (`ngrok http 4000`) ya que Wompi no puede
+alcanzar `localhost` directamente.
+
+## Correo de recuperación de contraseña
+
+Para que "¿Olvidaste tu contraseña?" funcione de verdad, completa las
+variables `SMTP_*` en el `.env`. Con una cuenta de Gmail: activa la
+verificación en dos pasos, genera una "contraseña de aplicación", y
+úsala como `SMTP_PASSWORD` (`SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`).
+Para producción real conviene un servicio dedicado (Resend, SendGrid,
+Amazon SES) en vez de una cuenta personal.
+
+## Facturación electrónica (DIAN) — por qué no está incluida
+
+Emitir factura electrónica en Colombia requiere ser facturador autorizado
+o contratar un proveedor ya certificado por la DIAN (Siigo, Alegra,
+Facturación Nacional, etc.) — no es algo que se resuelva solo con código.
+Lo que sí queda preparado: la tabla `pedidos` ya tiene las columnas
+`facturado` y `factura_url`, listas para conectar un proveedor el día que
+el negocio opere con clientes reales.
+
 ## Seguridad — qué se implementó y por qué
 
-- **Contraseñas con `bcryptjs`** (12 rounds): nunca se guarda la contraseña en texto plano, solo su hash.
-- **JWT en cookie `httpOnly`**: el token de sesión no es accesible desde JavaScript del navegador, lo que reduce el riesgo de robo de sesión por ataques XSS. En producción, la cookie usa `secure: true` y `sameSite: 'none'` porque el frontend y el backend viven en dominios distintos (Vercel y Render).
-- **Mismos mensajes de error** en login y recuperación de contraseña exista o no la cuenta, para no revelar qué correos están registrados.
-- **Los precios del pedido se recalculan en el servidor** a partir de la base de datos — el backend nunca confía en el precio que manda el navegador, así nadie puede alterar el total del pedido manipulando el frontend. Esto incluye las pizzas personalizadas (ver `src/data/personalizacionData.js`).
-- **Rutas de administración protegidas** por rol, verificado en cada petición (no solo ocultando botones en el frontend).
-- **Nunca manejamos datos de tarjeta**: el Widget de Wompi corre en un dominio de Wompi, no en el nuestro — cumple PCI-DSS por diseño.
-- **Firma de integridad y verificación de webhook**: el monto a cobrar se firma con una llave secreta que solo conoce el backend (evita que alguien manipule el total antes de pagar), y cada webhook de Wompi se valida contra su propia firma antes de confiar en él.
-- **El inventario solo se descuenta cuando el pago queda aprobado** (vía webhook), nunca antes — así no se "reservan" productos por pagos que nunca se completan. En el flujo de "Efectivo a la Entrega" (el que se demuestra hoy), el inventario se descuenta al confirmar el pedido, ya que no hay pasarela externa que confirmar.
+- **Contraseñas con `bcryptjs`** (12 rounds): nunca se guarda la
+  contraseña en texto plano.
+- **JWT en cookie `httpOnly`**: no accesible desde JavaScript del
+  navegador (reduce el riesgo de robo de sesión por XSS). En producción,
+  la cookie usa `secure: true` y `sameSite: 'none'`, porque el frontend
+  (Vercel) y el backend (Render) viven en dominios distintos.
+- **Mismos mensajes de error** en login y recuperación de contraseña,
+  exista o no la cuenta, para no revelar qué correos están registrados.
+- **Precios recalculados en el servidor**, incluidas las pizzas
+  personalizadas — el backend nunca confía en lo que mande el navegador.
+- **Rutas de administración protegidas por rol**, verificado en cada
+  petición del backend, no solo ocultando botones en el frontend.
+- **Nunca se manejan datos de tarjeta**: el Widget de Wompi corre en el
+  dominio de Wompi, no en el nuestro.
+- **Firma de integridad y verificación de webhook** para el flujo de
+  pago en línea (ver arriba).
+- **El inventario se descuenta solo cuando el pago queda confirmado**
+  (en el flujo de Wompi) o al crear el pedido (en efectivo, donde no hay
+  nada externo que confirmar).
 
-## Despliegue actual
+## Despliegue
 
-Este backend está desplegado en **Render** (plan gratuito), conectado a una base de datos **MySQL en Aiven** (plan gratuito, con conexión SSL vía `ca.pem`). El frontend vive en **Vercel**. Para los enlaces en vivo, credenciales de administrador y cómo probar el sitio completo, ver el `README.md` en la raíz del repositorio.
+Este backend está desplegado en **Render** (plan gratuito), conectado a
+una base de datos **MySQL en Aiven** (plan gratuito, conexión SSL vía
+`ca.pem`). El `FRONTEND_URL` configurado en Render debe coincidir
+exactamente con el dominio del frontend en Vercel, o el navegador
+bloqueará las peticiones por CORS.
 
-> El plan gratuito de Render "duerme" el servicio tras ~15 minutos sin tráfico; la primera petición después de eso puede tardar hasta un minuto.
+> El plan gratuito de Render "duerme" el servicio tras ~15 minutos sin
+> tráfico; la primera petición después de eso puede tardar hasta un
+> minuto en responder.
 
-## Lo que sigue faltando (próximos pasos de la hoja de ruta)
+Para los enlaces en vivo y cómo probar el sitio completo, ver el
+`README.md` en la raíz del repositorio.
 
-- **Facturación electrónica (DIAN)**: preparado a nivel de base de datos (`facturado`, `factura_url`), pero requiere contratar un proveedor certificado — ver la sección de arriba.
-- **WebSockets para el panel de administración**: hoy el panel usa "sondeo" (vuelve a preguntar cada 8 segundos) — funciona bien, pero para pedidos verdaderamente instantáneos el siguiente paso sería Socket.io.
-- **Migraciones versionadas**: por ahora los archivos `.sql` se ejecutan uno a uno a mano; para un equipo más grande conviene una herramienta de migraciones (ej. Prisma Migrate si se migra a un ORM).
-- **Reintentos de webhook**: si el backend está caído justo cuando Wompi intenta notificar, Wompi reintenta automáticamente por un tiempo — pero vale la pena monitorear los logs del servidor en producción para detectar webhooks fallidos.
+## Pendiente / fuera de alcance
+
+- **Facturación electrónica (DIAN)** — ver sección arriba.
+- **WebSockets**: el panel de administración usa sondeo cada 8 segundos
+  en vez de actualizaciones instantáneas; el siguiente paso natural sería
+  Socket.io.
+- **Migraciones versionadas**: hoy los `.sql` se corren a mano; para un
+  equipo más grande convendría una herramienta dedicada.
+- **Monitoreo de webhooks fallidos**: Wompi reintenta automáticamente si
+  el backend está caído al momento de notificar, pero conviene revisar
+  los logs de producción para detectar fallos.
