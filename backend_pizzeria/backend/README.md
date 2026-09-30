@@ -1,6 +1,6 @@
 # Il Capo della Pizza — Backend (API REST + MySQL)
 
-Esto es el backend real de la Fase 2 de la hoja de ruta: reemplaza el
+Esto es el backend real: reemplaza el
 `localStorage` del prototipo por una base de datos MySQL de verdad, con
 autenticación segura y una API que el frontend React consume.
 
