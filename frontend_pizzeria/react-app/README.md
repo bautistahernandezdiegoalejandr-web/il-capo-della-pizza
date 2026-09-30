@@ -3,6 +3,11 @@
 Frontend de la aplicación, migrado del prototipo original en un solo HTML
 (Fase 1) y ahora conectado a un backend real con MySQL (Fase 2).
 
+> 📌 **Este frontend ya está desplegado en producción.** Ver la sección
+> [Despliegue actual](#despliegue-actual) más abajo, o el `README.md` en la
+> raíz del repositorio para los enlaces en vivo y cómo probar el sitio
+> completo.
+
 ## Cómo correrlo en tu computador
 
 Necesitas Node.js 18+ instalado. Este proyecto se generó sin conexión a
@@ -14,8 +19,13 @@ npm install
 
 ### Conéctalo al backend
 
-Crea un archivo `.env` en esta carpeta (junto a `package.json`) con:
+Copia el archivo de ejemplo y complétalo:
 
+```bash
+cp .env.example .env
+```
+
+Para desarrollo local (con el backend corriendo en tu computador):
 ```
 VITE_API_URL=http://localhost:4000/api
 ```
@@ -40,7 +50,9 @@ src/
 ├── components/       Header, Footer, TarjetaProducto, RutaAdmin (protege /admin)
 ├── context/          CarritoContext (carrito, en localStorage) y UsuarioContext (sesión real vía API)
 ├── services/
-│   └── api.js         Cliente HTTP centralizado hacia el backend
+│   └── api.js         Cliente HTTP centralizado hacia el backend. Usa `credentials: 'include'`
+│                       en cada petición — es lo que permite que la cookie de sesión viaje
+│                       correctamente incluso con el backend en otro dominio (ver Despliegue)
 ├── data/
 │   └── menuData.js    Ya NO es la fuente del menú (eso ahora viene de la API) — se
 │                       conserva solo para los datos de "Crea tu Pizza" (tamaños/masas/extras)
@@ -69,7 +81,17 @@ src/
 - **`Confirmacion.jsx`**: cuando el pago fue en línea, esta pantalla ahora **consulta el backend** (`GET /api/pagos/estado/:referencia`) cada pocos segundos hasta confirmar si el pago fue aprobado o rechazado — no asume éxito solo porque el navegador volvió a esta URL.
 - **`AdminPedidos.jsx`** y **`Cuenta.jsx`**: ahora muestran también el estado del pago (pendiente/aprobado/declinado), no solo el estado de preparación del pedido.
 
+> ⚠️ **Estado actual de "Pago en línea":** el código de esta integración está completo y funcional (ver arriba y el README del backend), pero la opción aparece **deshabilitada visualmente** en `Pago.jsx` — atenuada, con un badge "Próximamente" y sin poder seleccionarse — para que la demostración del proyecto no dependa de la disponibilidad de un servicio externo durante la sustentación. "Efectivo a la Entrega" queda como la única opción seleccionable y es el flujo que se demuestra de punta a punta.
+
 ## Qué sigue siendo una simulación o queda pendiente
 
 - **Facturación electrónica (DIAN)**: no implementada — requiere un proveedor certificado (ver el README del backend, sección "Facturación electrónica").
 - **WebSockets**: el panel de administración usa sondeo cada 8 segundos en vez de actualizaciones instantáneas — funciona bien para el tamaño de este negocio, pero es una mejora futura posible.
+
+## Despliegue actual
+
+Este frontend está desplegado en **Vercel**, con `Root Directory` apuntando a esta carpeta dentro del monorepo. El archivo `vercel.json` en esta misma carpeta le indica a Vercel que redirija cualquier ruta (`/menu`, `/admin`, etc.) hacia `index.html`, para que las rutas de React Router no den error 404 al recargar la página directamente en ellas.
+
+La variable de entorno `VITE_API_URL` en Vercel apunta al backend real desplegado en Render — **ojo:** Vite incrusta esta variable dentro del código al momento de compilar, así que si la cambias en el panel de Vercel, necesitas disparar un nuevo *Redeploy* para que tenga efecto; no basta con guardarla.
+
+Para los enlaces en vivo, credenciales de administrador y cómo probar el sitio completo, ver el `README.md` en la raíz del repositorio.
