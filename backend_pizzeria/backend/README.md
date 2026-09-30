@@ -4,10 +4,17 @@ Esto es el backend real de la Fase 2 de la hoja de ruta: reemplaza el
 `localStorage` del prototipo por una base de datos MySQL de verdad, con
 autenticación segura y una API que el frontend React consume.
 
+> 📌 **Este backend ya está desplegado en producción.** Ver la sección
+> [Despliegue actual](#despliegue-actual) más abajo, o el `README.md` en la
+> raíz del repositorio para los enlaces en vivo y cómo probar el sitio
+> completo.
+
 ## Requisitos
 
 - **Node.js** 18 o superior.
-- **MySQL** 8 o superior instalado y corriendo en tu computador (o un servicio como PlanetScale, Railway, AWS RDS, etc. cuando quieras desplegarlo).
+- **MySQL** 8 o superior. Puedes usar:
+  - Un servidor local en tu computador, o
+  - Un proveedor en la nube (este proyecto usa **Aiven**, plan gratuito). Si tu proveedor exige conexión **SSL** (como Aiven), necesitarás su certificado — ver el paso 3.
 
 ## Puesta en marcha, paso a paso
 
@@ -20,10 +27,15 @@ npm install
 
 ### 2. Crea la base de datos
 
-Con tu servidor MySQL corriendo, ejecuta:
+Con tu servidor MySQL corriendo (local o en la nube), ejecuta:
 
 ```bash
 mysql -u root -p < src/db/schema.sql
+```
+
+Si tu proveedor exige SSL (ej. Aiven), agrega las banderas correspondientes:
+```bash
+mysql --host=TU_HOST --port=TU_PUERTO --user=TU_USUARIO --password="TU_CLAVE" --ssl-ca="ruta/al/ca.pem" --ssl-mode=REQUIRED < src/db/schema.sql
 ```
 
 Esto crea la base de datos `il_capo_della_pizza` y las 6 tablas: `usuarios`,
@@ -38,12 +50,14 @@ cp .env.example .env
 ```
 
 Como mínimo, completa:
-- `DB_USER` y `DB_PASSWORD`: tus credenciales de MySQL.
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: tus credenciales de MySQL.
 - `JWT_SECRET`: una cadena aleatoria larga. Puedes generar una con:
   ```bash
   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
   ```
 - `SMTP_*`: credenciales de un servidor de correo, para que funcione la recuperación de contraseña (ver sección de abajo).
+
+**Si tu base de datos exige SSL** (Aiven y la mayoría de proveedores gratuitos en la nube lo exigen): descarga el certificado CA desde el panel de tu proveedor y guárdalo como `ca.pem` en la raíz de esta carpeta (`backend/ca.pem`, junto a `server.js`). `src/config/db.js` lo detecta automáticamente si existe — si no existe, se conecta sin SSL (útil para MySQL local). Este archivo es un certificado público, no un secreto, pero de todas formas revisa que esté listado en tu `.gitignore` de forma consciente según tu flujo de trabajo.
 
 ### 4. Carga los datos iniciales (menú + usuario admin)
 
@@ -53,6 +67,7 @@ npm run seed
 
 Esto imprime en la consola el correo y la contraseña del usuario
 administrador de ejemplo — **cámbiala apenas inicies sesión la primera vez**.
+Correr el seed más de una vez es seguro: no duplica productos ni el usuario admin.
 
 ### 5. Inicia el servidor
 
@@ -60,7 +75,7 @@ administrador de ejemplo — **cámbiala apenas inicies sesión la primera vez**
 npm run dev
 ```
 
-Deberías ver: `🍕 API corriendo en http://localhost:4000`
+Deberías ver: `API corriendo en http://localhost:4000` (o el puerto que definas en `PORT`; en Render, por ejemplo, la plataforma asigna ese valor automáticamente).
 
 Prueba que funciona abriendo `http://localhost:4000/api/salud` en el
 navegador — debería mostrar `{"ok":true, ...}`.
@@ -84,6 +99,13 @@ Fase 3 de la hoja de ruta: los pagos ya no son una simulación — se procesan
 de verdad a través de **Wompi**, la pasarela más usada en comercios
 colombianos (soporta tarjeta, PSE, Nequi y Bancolombia en un solo widget).
 
+> ⚠️ **Estado actual:** el código de esta integración está completo y
+> funcional, pero la opción "Pago en línea" está **deshabilitada
+> visualmente en la interfaz** (ver `Pago.jsx` del frontend), para que la
+> demostración del proyecto no dependa de la disponibilidad de un servicio
+> externo. El flujo que se demuestra es "Efectivo a la Entrega". Todo lo
+> descrito en esta sección sigue siendo válido si se reactiva la opción.
+
 1. Crea una cuenta de comercio en [comercios.wompi.co](https://comercios.wompi.co) (el proceso de aprobación para cobrar de verdad toma unos días; mientras tanto puedes probar todo con las llaves de **sandbox/pruebas**).
 2. En el panel de Wompi, ve a la sección de "Llaves API" y copia:
    - **Llave pública** (`pub_test_...` en pruebas, `pub_prod_...` en producción)
@@ -97,7 +119,7 @@ colombianos (soporta tarjeta, PSE, Nequi y Bancolombia en un solo widget).
    WOMPI_EVENTS_SECRET=...
    WOMPI_PRIVATE_KEY=prv_test_...
    ```
-4. **Configura el webhook** en el panel de Wompi (sección "Eventos" o "Webhooks"), apuntando a:
+4. **Configura el webhook** en el panel de Wompi (sección "Eventos" o "Webhooks"), apuntando a tu dominio público, por ejemplo:
    ```
    https://TU-DOMINIO-PUBLICO/api/pagos/webhook/wompi
    ```
@@ -107,7 +129,7 @@ colombianos (soporta tarjeta, PSE, Nequi y Bancolombia en un solo widget).
    mysql -u root -p il_capo_della_pizza < src/db/migrations/002_pagos.sql
    mysql -u root -p il_capo_della_pizza < src/db/migrations/003_facturacion.sql
    ```
-   (Si es una instalación nueva, `schema.sql` ya incluye todo — no necesitas correr las migraciones por separado.)
+   (Si es una instalación nueva, `schema.sql` ya incluye todo — no necesitas correr las migraciones por separado; ejecutarlas sobre una base nueva producirá un error de "columna duplicada", que es inofensivo y esperado.)
 
 ### Cómo funciona el flujo de pago
 
@@ -137,6 +159,7 @@ Lo que sí queda preparado en este backend:
   así, cuál proveedor te conviene — la mayoría ofrece una API REST sencilla
   de conectar una vez tengas ese backend funcionando (que es justo lo que
   tienes aquí).
+
 ## Conectar el frontend
 
 En el proyecto de React, crea un archivo `.env` con:
@@ -154,10 +177,12 @@ el backend corriendo en paralelo (en otra terminal), ya deberían hablar entre s
 ```
 backend/
 ├── server.js               Punto de entrada: configura Express, CORS, cookies
+├── ca.pem                   Certificado SSL del proveedor de MySQL (si aplica)
 ├── src/
-│   ├── config/db.js         Conexión (pool) a MySQL
+│   ├── config/db.js         Conexión (pool) a MySQL, con SSL condicional
 │   ├── db/
 │   │   ├── schema.sql        Las 6 tablas de la base de datos
+│   │   ├── migrations/       Migraciones incrementales (solo para bases ya existentes)
 │   │   └── seed.js           Carga el menú inicial + usuario admin
 │   ├── middleware/
 │   │   ├── auth.js           Verifica sesión (JWT) y rol de administrador
@@ -192,13 +217,19 @@ backend/
 ## Seguridad — qué se implementó y por qué
 
 - **Contraseñas con `bcryptjs`** (12 rounds): nunca se guarda la contraseña en texto plano, solo su hash.
-- **JWT en cookie `httpOnly`**: el token de sesión no es accesible desde JavaScript del navegador, lo que reduce el riesgo de robo de sesión por ataques XSS.
+- **JWT en cookie `httpOnly`**: el token de sesión no es accesible desde JavaScript del navegador, lo que reduce el riesgo de robo de sesión por ataques XSS. En producción, la cookie usa `secure: true` y `sameSite: 'none'` porque el frontend y el backend viven en dominios distintos (Vercel y Render).
 - **Mismos mensajes de error** en login y recuperación de contraseña exista o no la cuenta, para no revelar qué correos están registrados.
 - **Los precios del pedido se recalculan en el servidor** a partir de la base de datos — el backend nunca confía en el precio que manda el navegador, así nadie puede alterar el total del pedido manipulando el frontend. Esto incluye las pizzas personalizadas (ver `src/data/personalizacionData.js`).
 - **Rutas de administración protegidas** por rol, verificado en cada petición (no solo ocultando botones en el frontend).
 - **Nunca manejamos datos de tarjeta**: el Widget de Wompi corre en un dominio de Wompi, no en el nuestro — cumple PCI-DSS por diseño.
 - **Firma de integridad y verificación de webhook**: el monto a cobrar se firma con una llave secreta que solo conoce el backend (evita que alguien manipule el total antes de pagar), y cada webhook de Wompi se valida contra su propia firma antes de confiar en él.
-- **El inventario solo se descuenta cuando el pago queda aprobado** (vía webhook), nunca antes — así no se "reservan" productos por pagos que nunca se completan.
+- **El inventario solo se descuenta cuando el pago queda aprobado** (vía webhook), nunca antes — así no se "reservan" productos por pagos que nunca se completan. En el flujo de "Efectivo a la Entrega" (el que se demuestra hoy), el inventario se descuenta al confirmar el pedido, ya que no hay pasarela externa que confirmar.
+
+## Despliegue actual
+
+Este backend está desplegado en **Render** (plan gratuito), conectado a una base de datos **MySQL en Aiven** (plan gratuito, con conexión SSL vía `ca.pem`). El frontend vive en **Vercel**. Para los enlaces en vivo, credenciales de administrador y cómo probar el sitio completo, ver el `README.md` en la raíz del repositorio.
+
+> El plan gratuito de Render "duerme" el servicio tras ~15 minutos sin tráfico; la primera petición después de eso puede tardar hasta un minuto.
 
 ## Lo que sigue faltando (próximos pasos de la hoja de ruta)
 
