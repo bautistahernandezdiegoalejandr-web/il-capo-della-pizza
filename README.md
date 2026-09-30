@@ -1,6 +1,6 @@
 # Il Capo della Pizza 🍕
 
-Sitio web de pedidos de pizza (SPA) con panel de administración, desarrollado como proyecto académico.
+Sitio  web de pedidos de pizza (SPA) con panel de administración, desarrollado como proyecto académico.
 
 ## 🔗 Enlaces en vivo
 
@@ -20,8 +20,8 @@ Sitio web de pedidos de pizza (SPA) con panel de administración, desarrollado c
 4. En **Forma de pago**, selecciona **Efectivo a la Entrega** (la opción de pago en línea está deshabilitada a propósito, ver más abajo)
 5. Confirma el pedido — verás el número de seguimiento
 6. Inicia sesión como administrador para ver el pedido en el panel:
-   - Correo: `admin@ilcapodellapizza.com.co`
-   - Contraseña: *(solicitar al autor del proyecto)*
+   - Correo: admin@ilcapodellapizza.com.co
+   - Contraseña: CambiaEstaClave123!
 7. Entra a **Panel Admin** → puedes cambiar el estado del pedido (Recibido → En preparación → En camino → Entregado)
 
 ## 🧱 Arquitectura
