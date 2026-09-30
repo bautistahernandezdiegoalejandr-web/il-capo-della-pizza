@@ -140,6 +140,16 @@ colombianos (soporta tarjeta, PSE, Nequi y Bancolombia en un solo widget).
 5. Solo cuando el webhook confirma el pago como aprobado, el backend descuenta el inventario y el pedido queda disponible para que la cocina lo prepare.
 6. Mientras tanto, la pantalla de "Confirmación" del frontend consulta `GET /api/pagos/estado/:referencia` cada pocos segundos hasta obtener el resultado final.
 
+
+### Flujo alterno: Efectivo a la Entrega
+
+Este es el flujo que se usa actualmente en la demostración del proyecto, mientras "Pago en línea" está deshabilitado en la interfaz (ver más arriba).
+
+1. El cliente arma su pedido y elige "Efectivo a la Entrega". El frontend llama a `POST /api/pedidos` igual que en el flujo de Wompi.
+2. Como no hay una pasarela externa que confirme el pago, el backend no espera ningún webhook: crea el pedido directamente con estado `recibido` y descuenta el inventario de inmediato (a diferencia del flujo de Wompi, donde el inventario se descuenta solo tras la confirmación).
+3. El pedido aparece al instante en el panel de administración, donde el equipo de cocina/reparto puede avanzar su estado manualmente: Recibido → En preparación → En camino → Entregado.
+4. El cliente paga en efectivo directamente al repartidor cuando recibe el pedido — no hay ninguna interacción con Wompi en este flujo.
+
 ## Facturación electrónica (DIAN) — por qué no está incluida
 
 En Colombia, dependiendo del tipo y volumen de tu negocio, puede ser
