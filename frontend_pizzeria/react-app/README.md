@@ -1,97 +1,170 @@
-# Il Capo della Pizza — Frontend en React
+# Il Capo della Pizza — Frontend
 
-Frontend de la aplicación, migrado del prototipo original en un solo HTML
-(Fase 1) y ahora conectado a un backend real con MySQL (Fase 2).
+SPA (Single Page Application) construida en **React + Vite + Tailwind CSS**.
+Es la cara visible del proyecto: catálogo de pizzas, carrito, checkout,
+cuenta de usuario y panel de administración.
 
-> 📌 **Este frontend ya está desplegado en producción.** Ver la sección
-> [Despliegue actual](#despliegue-actual) más abajo, o el `README.md` en la
-> raíz del repositorio para los enlaces en vivo y cómo probar el sitio
-> completo.
+> 📌 Este frontend ya está desplegado en producción, conectado a un backend
+> real con MySQL. Para los enlaces en vivo, credenciales de administrador y
+> cómo probar el flujo completo, ver el `README.md` en la raíz del
+> repositorio.
+
+## Tecnologías
+
+- **React** (con React Router para las rutas)
+- **Vite** como bundler y servidor de desarrollo
+- **Tailwind CSS** para los estilos
+- Consumo de una API REST propia (ver `backend/`) — no hay datos hardcodeados salvo lo indicado más abajo
 
 ## Cómo correrlo en tu computador
 
-Necesitas Node.js 18+ instalado. Este proyecto se generó sin conexión a
-internet, así que no incluye `node_modules` — instálalo tú mismo:
+Requiere Node.js 18 o superior.
 
 ```bash
 npm install
 ```
 
-### Conéctalo al backend
+### Variables de entorno
 
-Copia el archivo de ejemplo y complétalo:
-
+Copia el archivo de ejemplo:
 ```bash
 cp .env.example .env
 ```
 
-Para desarrollo local (con el backend corriendo en tu computador):
+Y completa la URL del backend:
 ```
 VITE_API_URL=http://localhost:4000/api
 ```
 
-Necesitas el **backend corriendo en paralelo** (ver la carpeta `backend/` y
-su propio README) para que el menú, el login y el checkout funcionen — sin
-el backend encendido, verás errores de "No pudimos cargar el menú" o
-similares, lo cual es esperado.
+Necesitas el **backend corriendo en paralelo** (ver `backend/README.md`)
+para que el menú, el login y el checkout funcionen. Sin el backend
+encendido verás errores como "No pudimos cargar el menú" — es esperado.
 
-### Inicia el frontend
+### Iniciar el servidor de desarrollo
 
 ```bash
 npm run dev
 ```
 
-Esto abre la app en `http://localhost:5173`.
+La app queda disponible en `http://localhost:5173`.
 
 ## Estructura del proyecto
 
 ```
-src/
-├── components/       Header, Footer, TarjetaProducto, RutaAdmin (protege /admin)
-├── context/          CarritoContext (carrito, en localStorage) y UsuarioContext (sesión real vía API)
-├── services/
-│   └── api.js         Cliente HTTP centralizado hacia el backend. Usa `credentials: 'include'`
-│                       en cada petición — es lo que permite que la cookie de sesión viaje
-│                       correctamente incluso con el backend en otro dominio (ver Despliegue)
-├── data/
-│   └── menuData.js    Ya NO es la fuente del menú (eso ahora viene de la API) — se
-│                       conserva solo para los datos de "Crea tu Pizza" (tamaños/masas/extras)
-├── pages/              Una página = una ruta real
-│   ├── ... (Inicio, Menu, Carrito, Pago, Cuenta, Contacto, etc.)
-│   ├── OlvidePassword.jsx / RestablecerPassword.jsx   Recuperación de contraseña
-│   └── admin/           Panel de administración (protegido, solo rol admin)
-│       ├── AdminLayout.jsx
-│       ├── AdminPedidos.jsx     Pedidos entrantes, actualiza cada 8s, cambia estado
-│       └── AdminProductos.jsx   Gestión del menú e inventario
-├── App.jsx             Rutas (React Router)
-└── main.jsx             Punto de entrada
+react-app/
+├── vercel.json              Reglas de Vercel: redirige cualquier ruta a index.html (SPA)
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── index.html
+└── src/
+    ├── main.jsx              Punto de entrada
+    ├── App.jsx                Definición de rutas (React Router)
+    ├── index.css              Estilos globales / directivas de Tailwind
+    │
+    ├── components/
+    │   ├── Header.jsx          Barra de navegación, carrito, sesión
+    │   ├── Footer.jsx
+    │   ├── TarjetaProducto.jsx Tarjeta de cada pizza en el menú
+    │   └── RutaAdmin.jsx        Protege las rutas /admin/* (solo rol admin)
+    │
+    ├── context/
+    │   ├── CarritoContext.jsx  Estado del carrito (persistido en localStorage)
+    │   └── UsuarioContext.jsx  Sesión real del usuario (login/registro/logout vía API)
+    │
+    ├── services/
+    │   └── api.js              Cliente HTTP centralizado. Usa `credentials: 'include'`
+    │                           en cada petición para que la cookie de sesión httpOnly
+    │                           viaje correctamente, incluso con el backend en otro dominio
+    │
+    ├── data/
+    │   └── menuData.js         NO es la fuente del catálogo (eso viene de la API).
+    │                           Solo guarda las opciones de "Crea tu Pizza" (tamaños,
+    │                           tipos de masa, extras) para la pizza personalizada
+    │
+    ├── utils/
+    │   └── formatearPrecio.js  Formatea números como pesos colombianos ($32.000)
+    │
+    └── pages/
+        ├── Inicio.jsx           Portada
+        ├── Menu.jsx              Catálogo (clásicas, especiales, vegetarianas, veganas)
+        ├── Personalizacion.jsx   "Crea tu Pizza"
+        ├── Carrito.jsx
+        ├── Pago.jsx              Checkout: dirección + forma de pago
+        ├── Confirmacion.jsx      Resumen del pedido ya confirmado
+        ├── Contacto.jsx
+        ├── Ayuda.jsx
+        ├── Terminos.jsx
+        ├── Privacidad.jsx
+        ├── Login.jsx / Registro.jsx
+        ├── Cuenta.jsx            Perfil del usuario + accesos rápidos
+        ├── OlvidePassword.jsx / RestablecerPassword.jsx
+        └── admin/                Panel de administración (protegido, solo rol admin)
+            ├── AdminLayout.jsx
+            ├── AdminPedidos.jsx    Pedidos entrantes; se actualiza cada 8s; cambia estado
+            └── AdminProductos.jsx  Gestión del menú e inventario (precio, stock, disponibilidad)
 ```
 
-## Qué cambió en la Fase 2
+## Catálogo y checkout
 
-- **`UsuarioContext`**: el login/registro/logout ahora llaman a la API real (`/api/auth/...`). La sesión vive en una cookie `httpOnly` que el navegador maneja solo — ya no hay contraseñas ni sesión simuladas en `localStorage`.
-- **`Menu.jsx`**: el catálogo se trae de `/api/productos` en vez de estar escrito en `menuData.js`.
-- **`Pago.jsx`**: el checkout envía el pedido real al backend, que recalcula los precios en el servidor antes de confirmar (por seguridad) y devuelve un número de seguimiento real.
-- **Panel de administración** (`/admin`): gestión de menú/inventario y pedidos entrantes, solo visible para el usuario con rol `admin` (verificado tanto en el frontend como, más importante, en el backend).
+- El menú se trae en vivo desde `GET /api/productos` — agregar, editar o
+  deshabilitar una pizza desde el panel admin se refleja de inmediato en la
+  tienda, sin tocar código.
+- Categorías actuales: **Clásicas**, **Especiales del Capo**, **Vegetarianas**,
+  **Veganas**, más la sección **Crea tu Pizza** (personalizada).
+- El checkout (`Pago.jsx`) envía el pedido real al backend, que recalcula
+  los precios en el servidor antes de confirmar — el total nunca se confía
+  desde el navegador.
 
-## Qué cambió en la Fase 3 (pagos reales)
+## Forma de pago
 
-- **`index.html`**: se agregó el script del Widget de Wompi (`checkout.wompi.co/widget.js`).
-- **`Pago.jsx`**: las opciones de pago pasaron de 3 (Tarjeta/PSE/Efectivo, con campos falsos) a 2 reales: **"Pago en línea"** (abre el Widget de Wompi — tarjeta, PSE, Nequi o Bancolombia, todo gestionado por Wompi) y **"Efectivo a la Entrega"**. Ya no existen campos de número de tarjeta en este proyecto — ese dato nunca debe tocar nuestro código.
-- **`Confirmacion.jsx`**: cuando el pago fue en línea, esta pantalla ahora **consulta el backend** (`GET /api/pagos/estado/:referencia`) cada pocos segundos hasta confirmar si el pago fue aprobado o rechazado — no asume éxito solo porque el navegador volvió a esta URL.
-- **`AdminPedidos.jsx`** y **`Cuenta.jsx`**: ahora muestran también el estado del pago (pendiente/aprobado/declinado), no solo el estado de preparación del pedido.
+`Pago.jsx` ofrece dos opciones:
 
-> ⚠️ **Estado actual de "Pago en línea":** el código de esta integración está completo y funcional (ver arriba y el README del backend), pero la opción aparece **deshabilitada visualmente** en `Pago.jsx` — atenuada, con un badge "Próximamente" y sin poder seleccionarse — para que la demostración del proyecto no dependa de la disponibilidad de un servicio externo durante la sustentación. "Efectivo a la Entrega" queda como la única opción seleccionable y es el flujo que se demuestra de punta a punta.
+- **Efectivo a la Entrega** — funcional de punta a punta: crea el pedido
+  real en la base de datos, aparece de inmediato en el panel admin, y su
+  estado se puede actualizar (Recibido → En preparación → En camino →
+  Entregado).
+- **Pago en línea (Wompi)** — la integración con Wompi (tarjeta, PSE, Nequi,
+  Bancolombia) está implementada por completo en el código, pero
+  **aparece deshabilitada visualmente** en esta pantalla (atenuada, con un
+  badge "Próximamente", sin poder seleccionarse). Esto es una decisión
+  deliberada para que la demostración del proyecto no dependa de la
+  disponibilidad de un servicio de pagos externo. El detalle técnico
+  completo de esa integración (firma de integridad, verificación de
+  webhook, etc.) está documentado en `backend/README.md`.
 
-## Qué sigue siendo una simulación o queda pendiente
+## Sesión y panel de administración
 
-- **Facturación electrónica (DIAN)**: no implementada — requiere un proveedor certificado (ver el README del backend, sección "Facturación electrónica").
-- **WebSockets**: el panel de administración usa sondeo cada 8 segundos en vez de actualizaciones instantáneas — funciona bien para el tamaño de este negocio, pero es una mejora futura posible.
+- El login, registro y cierre de sesión llaman a la API real
+  (`/api/auth/...`). La sesión vive en una cookie `httpOnly` — el frontend
+  nunca maneja el token directamente.
+- `RutaAdmin.jsx` protege todas las rutas bajo `/admin`; solo un usuario
+  con rol `admin` puede entrar (y el backend también lo verifica en cada
+  petición, no solo el frontend).
+- Desde `/admin` se gestionan dos cosas: los **pedidos** entrantes y el
+  **menú/inventario** (crear, editar, eliminar productos, activar o
+  desactivar su disponibilidad y ajustar el stock).
 
-## Despliegue actual
+## Despliegue
 
-Este frontend está desplegado en **Vercel**, con `Root Directory` apuntando a esta carpeta dentro del monorepo. El archivo `vercel.json` en esta misma carpeta le indica a Vercel que redirija cualquier ruta (`/menu`, `/admin`, etc.) hacia `index.html`, para que las rutas de React Router no den error 404 al recargar la página directamente en ellas.
+Este frontend está desplegado en **Vercel**:
 
-La variable de entorno `VITE_API_URL` en Vercel apunta al backend real desplegado en Render — **ojo:** Vite incrusta esta variable dentro del código al momento de compilar, así que si la cambias en el panel de Vercel, necesitas disparar un nuevo *Redeploy* para que tenga efecto; no basta con guardarla.
+- **Root Directory** del proyecto en Vercel: esta misma carpeta
+  (`frontend_pizzeria/react-app`) dentro del monorepo.
+- **`vercel.json`** redirige cualquier ruta hacia `index.html`, para que
+  recargar directamente en `/menu`, `/admin`, etc. no produzca un error 404.
+- La variable de entorno `VITE_API_URL` apunta al backend real en Render.
+  Como Vite incrusta esa variable en el código al momento de compilar,
+  cambiarla en el panel de Vercel requiere disparar un nuevo *Redeploy*
+  para que surta efecto.
 
-Para los enlaces en vivo, credenciales de administrador y cómo probar el sitio completo, ver el `README.md` en la raíz del repositorio.
+Para los enlaces en vivo y cómo probar el sitio completo, ver el
+`README.md` en la raíz del repositorio.
+
+## Pendiente / fuera de alcance
+
+- **Facturación electrónica (DIAN)**: no implementada en esta fase — ver
+  `backend/README.md`.
+- **Actualizaciones en tiempo real**: el panel admin usa sondeo cada 8
+  segundos en vez de WebSockets; funciona bien para el tamaño de este
+  proyecto.
