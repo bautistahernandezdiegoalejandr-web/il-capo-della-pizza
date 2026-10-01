@@ -70,16 +70,25 @@ Aplicación web full-stack para una pizzería: los clientes exploran el menú, a
 
 ## 📸 Recorrido por la aplicación
 
-> Sube tus capturas a `docs/img/` con estos nombres y se mostrarán automáticamente.
+
 
 | | |
 |---|---|
-| **1. Inicio** <br> <img width="1732" height="867" alt="image" src="https://github.com/user-attachments/assets/2017d3b8-2ed6-4d41-b481-abe9703e2e3d" />
- | **2. Menú de pizzas** <br> ![Menú](docs/img/02-menu.png) |
-| **3. Crea tu Pizza** <br> ![Personalización](docs/img/03-crea-tu-pizza.png) | **4. Carrito** <br> ![Carrito](docs/img/04-carrito.png) |
-| **5. Registro / Login** <br> ![Login](docs/img/05-login.png) | **6. Pago** <br> ![Pago](docs/img/06-pago.png) |
-| **7. Confirmación del pedido** <br> ![Confirmación](docs/img/07-confirmacion.png) | **8. Mi cuenta** <br> ![Cuenta](docs/img/08-cuenta.png) |
-| **9. Admin: pedidos** <br> ![Admin pedidos](docs/img/09-admin-pedidos.png) | **10. Admin: productos** <br> ![Admin productos](docs/img/10-admin-productos.png) |
+| **1. Inicio** <br> <img width="1732" height="867" alt="image" src="https://github.com/user-attachments/assets/2017d3b8-2ed6-4d41-b481-abe9703e2e3d" /> |
+| **2. Menú de pizzas** <br> <img width="1050" height="758" alt="image" src="https://github.com/user-attachments/assets/d2e257d4-c032-46e3-9972-5c93e3a8f5ff" />
+ |
+| **3. Crea tu Pizza** <img width="1059" height="883" alt="image" src="https://github.com/user-attachments/assets/98763abb-cc2f-446f-9229-39b81f51b4b7" /> |
+ | **4. Carrito** <img width="1090" height="588" alt="image" src="https://github.com/user-attachments/assets/2414eb93-4416-4ee1-8905-d38e87e82c31" /> |
+| **5. Registro / Login** <img width="1033" height="810" alt="image" src="https://github.com/user-attachments/assets/452d0e0b-9ed3-48b7-b08c-393c02be63b3" /> <img width="561" height="507" alt="image" src="https://github.com/user-attachments/assets/c3c681a7-b0f5-45d9-b0bb-1d430dd19bec" />
+
+ | **6. Pago** <br> <img width="1062" height="671" alt="image" src="https://github.com/user-attachments/assets/7a5eaa32-ea90-47d0-99a8-ee13b4467fae" />
+ |
+| **7. Confirmación del pedido** <br> <img width="714" height="638" alt="image" src="https://github.com/user-attachments/assets/3b44dd4d-d9db-4a60-8b12-5ded24d29fbf" />
+ | **8. Mi cuenta** <img width="1457" height="626" alt="image" src="https://github.com/user-attachments/assets/dd174cdd-1f11-4d61-b3ff-b678fcc82007" />
+ |
+| **9. Admin: pedidos** <img width="1066" height="879" alt="image" src="https://github.com/user-attachments/assets/0add860b-75cd-47f7-a0d0-7be58e7ce1f7" />
+ | **10. Admin: productos** <img width="1102" height="836" alt="image" src="https://github.com/user-attachments/assets/ea2880fc-4017-47dd-b84f-a8e97d12b914" />
+ |
 
 ---
 
