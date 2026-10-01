@@ -74,7 +74,8 @@ Aplicación web full-stack para una pizzería: los clientes exploran el menú, a
 
 | | |
 |---|---|
-| **1. Inicio** <br> ![Inicio](docs/img/01-inicio.png) | **2. Menú de pizzas** <br> ![Menú](docs/img/02-menu.png) |
+| **1. Inicio** <br> <img width="1732" height="867" alt="image" src="https://github.com/user-attachments/assets/2017d3b8-2ed6-4d41-b481-abe9703e2e3d" />
+ | **2. Menú de pizzas** <br> ![Menú](docs/img/02-menu.png) |
 | **3. Crea tu Pizza** <br> ![Personalización](docs/img/03-crea-tu-pizza.png) | **4. Carrito** <br> ![Carrito](docs/img/04-carrito.png) |
 | **5. Registro / Login** <br> ![Login](docs/img/05-login.png) | **6. Pago** <br> ![Pago](docs/img/06-pago.png) |
 | **7. Confirmación del pedido** <br> ![Confirmación](docs/img/07-confirmacion.png) | **8. Mi cuenta** <br> ![Cuenta](docs/img/08-cuenta.png) |
