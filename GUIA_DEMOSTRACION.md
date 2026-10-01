@@ -115,18 +115,26 @@ Desde el carrito pulsa **Continuar al pago**, completa la dirección de entrega 
 > Solo funciona con llaves **sandbox**. Nunca se ingresan datos de tarjeta reales en la demo.
 
 Resumen de costos que verás: subtotal + **envío $6.000** + **IVA 19 %**.
-📸 `docs/img/06-pago.png`
+
 
 ### 7. Confirmación
 Se muestra el número del pedido, el resumen y su estado (**recibido**).
-📸 `docs/img/07-confirmacion.png`
+
 
 ### 8. Mi cuenta
 Entra a **Cuenta** (con tu usuario): verás el saludo y los **Pedidos Recientes**, incluido el que acabas de crear.
-📸 `docs/img/08-cuenta.png`
+
 
 ### 9. Páginas informativas
 Recorre rápidamente **Contacto**, **Ayuda**, **Términos y Condiciones** y **Política de Privacidad** desde el pie de página.
+<img width="1251" height="872" alt="image" src="https://github.com/user-attachments/assets/48a186cf-e4b7-4a69-b4b8-1dfc388315c9" />
+<img width="727" height="800" alt="image" src="https://github.com/user-attachments/assets/1da0209e-52f3-4685-81e6-b043613b3801" />
+<img width="687" height="639" alt="image" src="https://github.com/user-attachments/assets/f73570b4-3367-4567-9e65-9156f01ce071" />
+<img width="673" height="693" alt="image" src="https://github.com/user-attachments/assets/57c63b5e-3ceb-4bb6-8d42-f807605769de" />
+
+
+
+
 
 ---
 
