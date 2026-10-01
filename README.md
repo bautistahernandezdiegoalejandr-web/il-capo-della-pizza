@@ -20,13 +20,12 @@ Aplicación web full-stack para una pizzería: los clientes exploran el menú, a
 >
 > Más detalles en [Solución de problemas](#-solución-de-problemas).
 
-## 🎥 Video de demostración
+## 🎥 Video de demostración del despliegue y funcionamiento del sitio web creado
 
-<!-- Opción 1: arrastra el .mp4 (máx. ~10 MB) a este editor y GitHub generará el enlace -->
-<!-- Opción 2: video en YouTube (no listado) con miniatura clicable: -->
-<!-- [![Video de demostración](docs/img/miniatura-video.png)](https://youtu.be/TU_VIDEO) -->
+*(Dar clic al siguiente enlace para observar el video de la demostración en Drive.)*
 
-*(Próximamente: aquí va el video de demostración del proyecto.)*
+https://drive.google.com/file/d/1cZgMvR_qsKQ-q5WMGXFQnWzspX9e157a/view?usp=sharing
+
 
 ---
 
