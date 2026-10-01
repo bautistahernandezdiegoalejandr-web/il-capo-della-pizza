@@ -295,4 +295,4 @@ Prefijo común: `/api`. Los endpoints protegidos usan la cookie `token` (`httpOn
 
 ## 👤 Autor
 
-**TU NOMBRE** — [GitHub](https://github.com/TU_USUARIO) · [LinkedIn](https://linkedin.com/in/TU_PERFIL)
+**DIEGO ALEJANDRO BAUTISTA HERNANDEZ**
