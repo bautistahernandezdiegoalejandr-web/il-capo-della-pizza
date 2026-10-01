@@ -21,6 +21,8 @@ La demo usa planes gratuitos que se "duermen". Haz estos pasos **antes** de most
 2. Abre el servicio `il-capo-della-pizza-mysql`.
 3. Si junto al nombre aparece **"Apagado"**, abre el menú **⋯** (arriba a la derecha) y elige **Encender / Power on**.
 4. Espera a que el estado cambie a **"En ejecución"** (puede tardar unos minutos).
+   <img width="1909" height="873" alt="image" src="https://github.com/user-attachments/assets/bbc62ced-9dcc-4ec9-9f4a-e9a2866135a5" />
+
 
 ### Paso 2. Despertar el backend (Render)
 1. Abre en el navegador: `https://il-capo-della-pizza.onrender.com/api/salud`
