@@ -173,37 +173,3 @@ Recorre rápidamente **Contacto**, **Ayuda**, **Términos y Condiciones** y **Po
 | El carrito/login llama a una URL equivocada | `VITE_API_URL` en Vercel debe terminar en `/api`; redespliega tras cambiarla. |
 | El pago en línea queda "pendiente" | Revisa la URL de eventos en Wompi: `…/api/pagos/webhook/wompi`. |
 
----
-
-## Parte E — Guion para grabar el video y capturas
-
-### Guion sugerido (3–5 min)
-| Tiempo | Qué mostrar |
-|---|---|
-| 0:00 | Presentación: qué es el proyecto y su stack (React · Express · MySQL · Vercel/Render/Aiven) |
-| 0:30 | Menú y categorías |
-| 1:00 | Crea tu Pizza (tamaño, masa, extras) |
-| 1:45 | Carrito → registro/login |
-| 2:30 | Pago (efectivo y/o Wompi sandbox) y confirmación |
-| 3:15 | Panel admin: cambio de estado del pedido y gestión de productos |
-| 4:15 | Cierre: repositorio, README y tecnologías |
-
-### Consejos de grabación
-- Haz primero la **Parte A** para evitar esperas durante la grabación.
-- Graba en resolución 1080p, con el navegador a pantalla completa y sin pestañas personales a la vista.
-- Para subirlo directo a GitHub, mantenlo **por debajo de ~10 MB** (clips cortos o GIF). Si es más largo, súbelo a YouTube como *no listado* y enlázalo en el README.
-
-### Capturas a tomar (nombres para `docs/img/`)
-- [ ] `01-inicio.png`
-- [ ] `02-menu.png`
-- [ ] `03-crea-tu-pizza.png`
-- [ ] `04-carrito.png`
-- [ ] `05-login.png`
-- [ ] `06-pago.png`
-- [ ] `07-confirmacion.png`
-- [ ] `08-cuenta.png`
-- [ ] `09-admin-pedidos.png`
-- [ ] `10-admin-productos.png`
-- [ ] `miniatura-video.png` (si usas YouTube)
-
-> 🔒 Antes de tomar capturas, oculta correos y datos personales reales y no muestres llaves ni variables de entorno.
